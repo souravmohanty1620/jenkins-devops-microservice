@@ -30,7 +30,7 @@ pipeline {
 				sh "mvn clean compile"
 			}
 		}
-		
+
 		stage('test') {
 			steps{
 				sh "mvn test"
@@ -42,6 +42,33 @@ pipeline {
 				sh "mvn failsafe:integration-test failsafe:verify"
 			}
 		}
+
+		stage('Package') {
+			steps{
+				sh "mvn package -DskipTests"
+			}
+		}
+
+		stage('Build Docker Image') {
+			steps{
+				//docker build -t sourav2016/hello-world-python:$env.BUILD_TAG
+				script{
+					dockerImage = docker.build(sourav2016/hello-world-python:${env.BUILD_TAG})
+				}
+			}
+		}
+		stage('Push Docker Image') {
+			steps{
+				//sh "mvn failsafe:integration-test failsafe:verify"
+				script {
+					docker.withRegistry('','dockerhub') {
+					dockerImage.push();
+					dockerImage.push('latest');
+					}
+				}
+			}
+		}
+
 	}
 
 	post {
